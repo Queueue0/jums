@@ -18,6 +18,7 @@ type config struct {
 	BoxesDir string
 	CertFile string
 	KeyFile  string
+	LogLevel string
 }
 
 var confInstance *config
@@ -52,13 +53,11 @@ func initializeConfig() {
 	}
 
 	confInstance = &config{}
-	md, err := toml.DecodeFile(filepath.Join(configDir, configFname), confInstance)
+	_, err := toml.DecodeFile(filepath.Join(configDir, configFname), confInstance)
 	if err != nil {
 		// appropriate situation to panic since we flatly cannot proceed without the config
 		panic(err)
 	}
-
-	fmt.Printf("%+v\n", md.Keys())
 }
 
 func createConfigFile(dir, fname string) error {
@@ -72,11 +71,12 @@ func createConfigFile(dir, fname string) error {
 	}
 
 	c := config{
-		Domain: "localhost",
+		Domain:   "localhost",
 		Mxdomain: "localhost",
 		BoxesDir: "~/.jums/mailboxes",
-		KeyFile: "",
+		KeyFile:  "",
 		CertFile: "",
+		LogLevel: "INFO",
 	}
 
 	err = toml.NewEncoder(cf).Encode(c)
