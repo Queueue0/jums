@@ -14,6 +14,9 @@ import (
 	"github.com/Queueue0/jums/internal/smtp/packets"
 )
 
+// Extensions that are always supported regardless of TLS or authentication
+var alwaysSupportedExtensions = []string{"PIPELINING"}
+
 type state interface {
 	session() *Session
 	Handle([]byte) *packets.Status
@@ -40,10 +43,13 @@ func ehlo(s state, c *packets.Command) (state, *packets.Status) {
 	}
 
 	var sts *packets.Status
+	lines := append([]string{fmt.Sprintf("Hello there, %s!", name)}, alwaysSupportedExtensions...)
 	if _, ok := s.session().conn.(*tls.Conn); ok {
-		sts = packets.NewStatus(250, fmt.Sprintf("Hello there, %s!", name), "AUTH PLAIN")
+		lines = append(lines, "AUTH PLAIN")
+		sts = packets.NewStatus(250, lines...)
 	} else {
-		sts = packets.NewStatus(250, fmt.Sprintf("Hello there, %s!", name), "STARTTLS")
+		lines = append(lines, "STARTTLS")
+		sts = packets.NewStatus(250, lines...)
 	}
 
 	s.session().ext = true
